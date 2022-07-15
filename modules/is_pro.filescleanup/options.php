@@ -31,6 +31,20 @@ function FileListinfile($directory, $outputfile) {
 	closedir($handle);
 }
 
+function CreateDir($path,  $lastIsFile = false) {
+	$dirs = explode('/', $path);
+	if ($lastIsFile) {
+		unset($dirs[count($dirs) - 1]);
+	}
+	$resultdir = '';
+	foreach ($dirs as $dir) {
+		$resultdir .= $dir;
+		if ($dir != '') {
+			@mkdir($resultdir);
+		};
+		$resultdir .= '/';
+	}
+}
 
 
 
@@ -39,7 +53,10 @@ $request = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
 $doc_root = \Bitrix\Main\Application::getDocumentRoot();
 $url_module = str_replace($doc_root, '', __DIR__);
 $limitPerPage = 20;
-$filename_IblockFiles = __DIR__.'/filelist.txt';
+$work_file = $doc_root.'/upload/'.$arModuleCfg['MODULE_ID'].'/filelist.txt';
+$uploadPath = $doc_root.'/upload/';
+$basketPath = $doc_root.'/upload/'.$arModuleCfg['MODULE_ID'].'/basket/';
+CreateDir($basketPath);
 
 $tabList = array(
 	array(
@@ -61,6 +78,13 @@ $tabList = array(
 		'TAB' => Loc::getMessage('ISPRO_FILESCLEANUP_OPTIONS_MAIN_TAB_SET_NOTUSEDFILES'),
 		'ICON' => 'ib_settings',
 		'TITLE' => Loc::getMessage('ISPRO_FILESCLEANUP_OPTIONS_MAIN_TAB_TITLE_SET_NOTUSEDFILES')
+	),
+
+	array(
+		'DIV' => 'edit_basket',
+		'TAB' => Loc::getMessage('ISPRO_FILESCLEANUP_OPTIONS_MAIN_TAB_SET_BASKET'),
+		'ICON' => 'ib_settings',
+		'TITLE' => Loc::getMessage('ISPRO_FILESCLEANUP_OPTIONS_MAIN_TAB_TITLE_SET_BASKET')
 	)
 );
 
@@ -188,11 +212,14 @@ $tabControl->Begin();
 			$fileToDetete = $request->getPost('fileToDelete');
 			if (is_array($fileToDetete)) {
 				foreach ($fileToDetete as $fileToDel) {
+					$basketName = str_replace($uploadPath, $basketPath, $fileToDel);
+					CreateDir($basketName, true);
+					@copy($fileToDel, $basketName);
 					@unlink($fileToDel);
 				}
 			}
-			@unlink($filename_IblockFiles);
-			FileListinfile($doc_root.'/upload/iblock/', $filename_IblockFiles);
+			@unlink($work_file);
+			FileListinfile($uploadPath.'iblock/', $work_file);
 		?>
 		<script>
 			BX.ready(function(){
@@ -207,9 +234,9 @@ $tabControl->Begin();
 			</td>
 		</tr>
 		<?
-		if (file_exists($filename_IblockFiles)) {
-			$filelist = @file($filename_IblockFiles);
-			@unlink($filename_IblockFiles);
+		if (file_exists($work_file)) {
+			$filelist = @file($work_file);
+			@unlink($work_file);
 			if (is_array($filelist)) {
 				$oRes = \Bitrix\Main\FileTable::getList(['order' => ['ID' => 'ASC']]);
 				while (($arFile = $oRes->fetch()) && ($count < $limitPerPage)) {
@@ -217,9 +244,9 @@ $tabControl->Begin();
 				};
 				foreach ($filelist as $file) {
 					if (!in_array(trim($file), $filesInIbloks)) {
-						file_put_contents($filename_IblockFiles, trim($file)."\n", FILE_APPEND);
-					}
-				}
+						file_put_contents($work_file, trim($file)."\n", FILE_APPEND);
+					};
+				};
 			};
 		};
 		?>
@@ -238,9 +265,9 @@ $tabControl->Begin();
 		</script>
 		<?
 		$count = 0;
-		if (file_exists($filename_IblockFiles)) {
-			$filelist = @file($filename_IblockFiles);
-			@unlink($filename_IblockFiles);
+		if (file_exists($work_file)) {
+			$filelist = @file($work_file);
+			@unlink($work_file);
 			if (is_array($filelist)) {
 				?>
 
@@ -263,7 +290,7 @@ $tabControl->Begin();
 
 					<tr>
 						<td style="text-align: left; border-top: 1px solid #aaa;" valign="top">
-							<?$filelink = str_replace($doc_root, '', $file);?>
+							<?$filelink = str_replace($doc_root, '', trim($file));?>
 							<a href="<?=$filelink?>" target="_blank"><?=$filelink?></a>
 							<?if (in_array(mb_substr($filelink, -4), array('.jpg', 'jpeg', '.png', 'webp', '.gif', '.bmp'))) :?>
 								<br>
@@ -307,8 +334,92 @@ $tabControl->Begin();
 			<input type="submit" class="adm-btn-save" name="scannotusedfiles" value="<? echo Loc::getMessage('ISPRO_FILESCLEANUP_OPTIONS_BTN_SCAN'); ?>">
 		</td>
 	</tr>
+	<?
+	$tabControl->BeginNextTab();
+	?>
+	<?if ($request->getPost('showbasket') != '') {?>
+		<?
+
+			$fileToRestore = $request->getPost('fileToRestore');
+			if (is_array($fileToRestore)) {
+				foreach ($fileToRestore as $fileToRest) {
+					$originName = str_replace($basketPath, $uploadPath, $fileToRest);
+					CreateDir($originName, true);
+					@copy($fileToRest, $originName);
+					@unlink($fileToRest);
+				};
+			};
+			$fileToDeteteComplete = $request->getPost('fileToDelete');
+			if (is_array($fileToDeteteComplete)) {
+				foreach ($fileToDeteteComplete as $fileToDel) {
+					@unlink($fileToDel);
+				};
+			};
+
+			@unlink($work_file);
+			FileListinfile($basketPath, $work_file);
+		?>
+		<?if (file_exists($work_file)) {
+			$filelist = @file($work_file);
+			@unlink($work_file);
+			if (is_array($filelist)) {
+				?>
+				<tr>
+					<th style="text-align: left" width="70%"  valign="top">
+						<?=Loc::getMessage('ISPRO_FILESCLEANUP_OPTIONS_FILE_INFO')?>
+					</th>
+					<th width="15%">
+						<?=Loc::getMessage('ISPRO_FILESCLEANUP_OPTIONS_RESTORE')?>
+						<br>
+						<input type="checkbox" onclick="ispro_set_checkboxs('input[name^=fileToRestore]', this.checked);" >
+					</th>
+					<th width="15%">
+						<?=Loc::getMessage('ISPRO_FILESCLEANUP_OPTIONS_DELETE')?>
+						<br>
+						<input type="checkbox" onclick="ispro_set_checkboxs('input[name^=fileToDeteteComplete]', this.checked);" >
+					</th>
+				</tr>
+
+				<?
+				foreach ($filelist as $file) {
+					?>
+
+					<tr>
+						<td style="text-align: left; border-top: 1px solid #aaa" width="70%"  valign="top">
+							<?$filelink = str_replace($doc_root, '', trim($file));?>
+							<a href="<?=$filelink?>" target="_blank"><?=$filelink?></a>
+							<?if (in_array(mb_substr($filelink, -4), array('.jpg', 'jpeg', '.png', 'webp', '.gif', '.bmp'))) :?>
+								<br>
+								<img style="max-width: 200px; max-height: 100px" src="<?=$filelink?>">
+							<?endif?>
+						</td>
+						<td style="text-align: center; border-top: 1px solid #aaa;" valign="top">
+							<input type="checkbox" name="fileToRestore[]" value="<?=trim($file)?>" title="Restore">
+						</td>
+						<td style="text-align: center; border-top: 1px solid #aaa;" valign="top">
+							<input type="checkbox" name="fileToDeteteComplete[]" value="<?=trim($file)?>" title="Delete">
+						</td>
+					</tr>
+
+					<?
+				}
+			}
+		}?>
 
 
+		<tr>
+			<td colspan="3">
+				<input type="submit" class="adm-btn-save" name="showbasket" value="<? echo Loc::getMessage('ISPRO_FILESCLEANUP_OPTIONS_BTN_CONFIRM'); ?>">
+			</td>
+		</tr>
+
+	<?} else {?>
+		<tr>
+			<td colspan="3">
+				<input type="submit" class="adm-btn-save" name="showbasket" value="<? echo Loc::getMessage('ISPRO_FILESCLEANUP_OPTIONS_BTN_SHOWBASKET'); ?>">
+			</td>
+		</tr>
+	<?}?>
 	<?$tabControl->Buttons();?>
 <?$tabControl->End();?>
 </form>

@@ -34,6 +34,12 @@ $MESS['ISPRO_FILESCLEANUP_OPTIONS_NEXT'] = 'Следующая страница'
 $MESS['ISPRO_FILESCLEANUP_OPTIONS_MAIN_TAB_SET_NOTUSEDFILES'] = 'Не используемые файлы';
 $MESS['ISPRO_FILESCLEANUP_OPTIONS_MAIN_TAB_TITLE_SET_NOTUSEDFILES'] = 'Найти не используемые файлы в инфоблоках';
 
-$MESS['ISPRO_FILESCLEANUP_OPTIONS_EMPTY_NOTUSEDFILES'] = 'Файлов не используемых в инфолоках не обнаружено';
+$MESS['ISPRO_FILESCLEANUP_OPTIONS_EMPTY_NOTUSEDFILES'] = 'Файлов не используемых в инфоблоках не обнаружено';
 
 $MESS['ISPRO_FILESCLEANUP_OPTIONS_EMPTY_BADLINKS'] = 'Ссылок в полях инфоблоков на несуществующие Файлы не обнаружено';
+
+$MESS['ISPRO_FILESCLEANUP_OPTIONS_MAIN_TAB_SET_BASKET'] = 'Корзина';
+$MESS['ISPRO_FILESCLEANUP_OPTIONS_MAIN_TAB_TITLE_SET_BASKET'] = 'Корзина удаленных файлов через модуль';
+$MESS['ISPRO_FILESCLEANUP_OPTIONS_RESTORE'] = 'Восстановить';
+$MESS['ISPRO_FILESCLEANUP_OPTIONS_BTN_SHOWBASKET'] = 'Показать корзину';
+$MESS['ISPRO_FILESCLEANUP_OPTIONS_BTN_CONFIRM'] = 'Выполнить';
