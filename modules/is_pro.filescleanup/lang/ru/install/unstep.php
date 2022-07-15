@@ -1,0 +1,5 @@
+<?
+$MESS["ISPRO_FILESCLEANUP_UNSTEP_BEFORE"] 	   = "Модуль";
+$MESS["ISPRO_FILESCLEANUP_UNSTEP_AFTER"]  	   = "удален";
+$MESS["ISPRO_FILESCLEANUP_STEP_SUBMIT_BACK"]   = "Вернуться в список";
+?>
